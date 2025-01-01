@@ -1,28 +1,41 @@
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color: #213547;
-  background-color: #f0f2f5;
+  /* Light mode colors */
+  --bg-primary: #1B4332;
+  --bg-secondary: rgba(255, 255, 255, 0.95);
+  --text-primary: #2D3748;
+  --text-secondary: #4A5568;
+  --accent-primary: #2D6A4F;
+  --accent-secondary: #40916C;
+  --border-color: rgba(74, 85, 104, 0.2);
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --card-bg: rgba(255, 255, 255, 0.9);
+}
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+[data-theme='dark'] {
+  --bg-primary: #1A202C;
+  --bg-secondary: rgba(45, 55, 72, 0.95);
+  --text-primary: #E2E8F0;
+  --text-secondary: #A0AEC0;
+  --accent-primary: #48BB78;
+  --accent-secondary: #38A169;
+  --border-color: rgba(160, 174, 192, 0.2);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --card-bg: rgba(45, 55, 72, 0.9);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: linear-gradient(135deg, #87CEEB 0%, #98FB98 100%);
-  color: #213547;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   display: flex;
   justify-content: center;
   padding: 20px;
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 body::before {
@@ -44,31 +57,38 @@ body::before {
   z-index: 1;
 }
 
-h1 {
-  font-size: 2.5em;
-  line-height: 1.1;
-  margin-bottom: 1em;
-  color: #213547;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-h3 {
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
   margin: 0;
-  color: #213547;
 }
 
 p {
+  color: var(--text-secondary);
   margin: 0.5em 0;
+}
+
+button {
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: var(--accent-secondary);
+  }
+
+  &:disabled {
+    background: var(--text-secondary);
+    cursor: not-allowed;
+  }
 }
 
 @media (max-width: 768px) {
   body {
     padding: 10px;
-  }
-
-  h1 {
-    font-size: 2em;
-    margin-bottom: 0.5em;
   }
 }
 

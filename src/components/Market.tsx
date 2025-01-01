@@ -1,204 +1,206 @@
-import { useState } from 'react';
 import styled from 'styled-components';
-
-type FeedType = 'standard' | 'premium' | 'super';
-
-interface MarketProps {
-  points: number;
-  onBuyFeed: (feedType: FeedType) => void;
-  onSendPoints: (amount: number) => void;
-}
+import { FEEDS, FeedType } from '../App';
 
 const MarketContainer = styled.div`
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 15px;
   padding: 20px;
-  width: 100%;
-  max-width: 600px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 860px;
+  margin: 0 auto;
 `;
 
-const TabContainer = styled.div`
+const MarketHeader = styled.div`
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-`;
-
-const Tab = styled.button<{ active?: boolean }>`
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  background: ${props => props.active ? '#4CAF50' : '#e0e0e0'};
-  color: ${props => props.active ? 'white' : '#213547'};
-  cursor: pointer;
-  transition: all 0.3s;
-
-  &:hover {
-    background: ${props => props.active ? '#45a049' : '#d0d0d0'};
-  }
-`;
-
-const FeedItem = styled.div`
-  display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
   padding: 15px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  transition: all 0.3s;
-
-  &:hover {
-    background: #f5f5f5;
-    transform: translateY(-2px);
-  }
+  background: var(--bg-primary);
+  border-radius: 10px;
+  box-shadow: 0 2px 4px var(--shadow-color);
 `;
 
-const FeedInfo = styled.div`
-  flex: 1;
+const PointsDisplay = styled.div`
+  font-size: 1.2em;
+  font-weight: 500;
+  color: var(--text-primary);
   
-  h3 {
-    margin: 0;
-    color: #213547;
-  }
-  
-  p {
-    margin: 5px 0 0;
-    color: #666;
-    font-size: 0.9em;
+  span {
+    color: var(--accent-primary);
   }
 `;
 
-const BuyButton = styled.button`
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  background: #4CAF50;
-  color: white;
-  cursor: pointer;
-  transition: all 0.3s;
-
-  &:hover {
-    background: #45a049;
-  }
-
-  &:disabled {
-    background: #cccccc;
-    cursor: not-allowed;
-  }
+const ProductGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+  padding: 20px;
 `;
 
-const SendPointsContainer = styled.div`
+const ProductCard = styled.div`
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 15px;
-  padding: 20px;
-  background: #f5f5f5;
-  border-radius: 8px;
-`;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px var(--shadow-color);
+  min-width: 180px;
+  border: 1px solid var(--border-color);
 
-const Input = styled.input`
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 1em;
-`;
-
-const feedTypes: Array<{
-  name: string;
-  description: string;
-  price: number;
-  id: FeedType;
-}> = [
-  {
-    name: 'Standart Yem',
-    description: 'Enerji: %25, Verim: 0.15L/dk',
-    price: 50,
-    id: 'standard'
-  },
-  {
-    name: 'Premium Yem',
-    description: 'Enerji: %35, Verim: 0.25L/dk',
-    price: 100,
-    id: 'premium'
-  },
-  {
-    name: 'Süper Yem',
-    description: 'Enerji: %50, Verim: 0.4L/dk',
-    price: 200,
-    id: 'super'
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px var(--shadow-color);
   }
-];
 
-export function Market({ points, onBuyFeed, onSendPoints }: MarketProps) {
-  const [activeTab, setActiveTab] = useState('market');
-  const [sendAmount, setSendAmount] = useState('');
+  .product-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
 
-  const handleSendPoints = () => {
-    const amount = parseInt(sendAmount);
-    if (amount && amount > 0 && amount <= points) {
-      onSendPoints(amount);
-      setSendAmount('');
-    }
+  .product-name {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .product-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    padding: 10px;
+    background: var(--bg-primary);
+    border-radius: 8px;
+  }
+
+  .buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+  }
+`;
+
+const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 40px;
+  font-size: 0.9em;
+  
+  background: ${props => {
+    if (props.variant === 'primary') return '#2196F3';
+    if (props.variant === 'secondary') return props.disabled ? 'var(--bg-primary)' : '#4CAF50';
+    return 'var(--bg-primary)';
+  }};
+  color: ${props => props.variant === 'secondary' && !props.disabled ? 'white' : props.variant === 'primary' 
+    ? 'white'
+    : 'var(--text-primary)'};
+  border: 1px solid ${props => {
+    if (props.variant === 'primary') return '#1976D2';
+    if (props.variant === 'secondary') return props.disabled ? 'var(--border-color)' : '#43A047';
+    return 'var(--border-color)';
+  }};
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    background: ${props => {
+      if (props.variant === 'primary') return '#1976D2';
+      if (props.variant === 'secondary') return '#43A047';
+      return 'var(--bg-secondary)';
+    }};
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+  }
+`;
+
+interface MarketProps {
+  points: number;
+  level: number;
+  feed: { [key: string]: number };
+  onBuy: (feedType: string) => void;
+  onFeedCow: (feedType: string) => void;
+  hunger: number;
+  health: number;
+}
+
+const getProductIcon = (name: string) => {
+  const icons: { [key: string]: string } = {
+    'Çim': '🌿',
+    'Yaprak': '🍃',
+    'Buğday': '🌾',
+    'Ayçiçeği': '🌻',
+    'Mısır': '🌽',
+    'Karpuz': '🍉',
+    'Havuç': '🥕',
+    'Patlıcan': '🍆',
+    'Elma': '🍎',
+    'Kiraz': '🍒',
+    'Üzüm': '🍇',
+    'Lahana': '🥬',
+    'Şeftali': '🍑',
+    'Balkabağı': '🎃',
+    'Biber': '🫑',
+    'Limon': '🍋'
   };
+  return icons[name] || '🌱';
+};
 
+export function Market({ points, level, feed, onBuy, onFeedCow, hunger, health }: MarketProps) {
   return (
     <MarketContainer>
-      <TabContainer>
-        <Tab 
-          active={activeTab === 'market'} 
-          onClick={() => setActiveTab('market')}
-        >
-          Market
-        </Tab>
-        <Tab 
-          active={activeTab === 'send'} 
-          onClick={() => setActiveTab('send')}
-        >
-          Puan Gönder
-        </Tab>
-      </TabContainer>
-
-      {activeTab === 'market' ? (
-        <div>
-          <h2>Yem Market</h2>
-          <p>Mevcut Puanınız: {points}</p>
-          {feedTypes.map(feed => (
-            <FeedItem key={feed.id}>
-              <FeedInfo>
-                <h3>{feed.name}</h3>
-                <p>{feed.description}</p>
-              </FeedInfo>
-              <BuyButton 
-                onClick={() => onBuyFeed(feed.id)}
-                disabled={points < feed.price}
+      <MarketHeader>
+        <PointsDisplay>Mevcut Puanınız: {points.toLocaleString('tr-TR')}</PointsDisplay>
+      </MarketHeader>
+      <ProductGrid>
+        {FEEDS.map((product, index) => (
+          <ProductCard key={product.name}>
+            <div className="product-info">
+              <span className="product-name">
+                {getProductIcon(product.name)} {product.name}
+              </span>
+              <div className="product-stats">
+                <span>Enerji: %{product.energy}</span>
+                <span>Verim: {product.yield} Lt/dk</span>
+                <span>Fiyat: {product.price.toLocaleString('tr-TR')} Puan</span>
+                <span>Stok: {feed[product.name] || 0}</span>
+              </div>
+            </div>
+            <div className="buttons">
+              <Button
+                variant="primary"
+                onClick={() => onBuy(product.name)}
+                disabled={points < product.price || level < product.minLevel}
               >
-                Satın Al ({feed.price} puan)
-              </BuyButton>
-            </FeedItem>
-          ))}
-        </div>
-      ) : (
-        <SendPointsContainer>
-          <h2>Puan Gönder</h2>
-          <p>Mevcut Puanınız: {points}</p>
-          <p>Gönderdiğiniz puanlar, aylık reklam gelirinden pay almanızı sağlar.</p>
-          <Input
-            type="number"
-            value={sendAmount}
-            onChange={(e) => setSendAmount(e.target.value)}
-            placeholder="Göndermek istediğiniz puan miktarı"
-            max={points}
-            min={1}
-          />
-          <BuyButton 
-            onClick={handleSendPoints}
-            disabled={!sendAmount || parseInt(sendAmount) > points}
-          >
-            Puanları Gönder
-          </BuyButton>
-        </SendPointsContainer>
-      )}
+                Satın Al
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => onFeedCow(product.name)}
+                disabled={!feed[product.name] || health <= 0}
+              >
+                Besle
+              </Button>
+            </div>
+          </ProductCard>
+        ))}
+      </ProductGrid>
     </MarketContainer>
   );
 } 

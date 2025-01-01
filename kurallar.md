@@ -19,7 +19,7 @@
 
 1.  **İnek Bakımı:** Oyuncular, ineklerinin açlık ve sağlık durumlarını takip ederler.
 2.  **Açlık Yönetimi:**
-    *   İneğin açlığı 240 dakikada %100'den %0'a düşer.
+    *   İneğin açlığı %100'den %0'a düşmesi 240 dakikada gerçekleşir.
     *   Açlık %0 olduğunda, ineğin sağlığı her dakika azalmaya başlar.
     *   Oyuncular, envanterdeki yemlerle ineği beslerler.
     *   1 yem, açlığı %25 doldurur. Toplam 4 yem ile açlık %100 olur.
@@ -107,3 +107,102 @@
 ## İletişim
 
 (İletişim bilgilerinizi buraya ekleyin)
+
+# Oyun Kuralları
+
+## Temel Kurallar
+- Oyuna 1 inek ile başlarsınız ve her ayın son gününe kadar (23:59'a kadar) ineğinizi hayatta tutmalısınız.
+- İneğinizin sağlığı başlangıçta %100'dür ve 5.040 dakika boyunca devam eder.
+- İneğin açlığı %100'den başlar ve 240 dakika içinde %0'a düşer.
+- Açlık %0'a düştüğünde, ineğin sağlığı her dakika azalmaya başlar.
+- Sağlık azaldığında tekrar iyileştirilemez.
+- İneğinizi açlığı bitmeden önce envanterdeki yemlerle beslemelisiniz.
+- Her yem kullanımı açlığı %25 artırır. Toplam 4 yem ile açlık %100 olur.
+- İnek tok olduğunda (açlık %100), her dakika süt üretimi yapar.
+- Üretilen sütü satarak puan kazanabilirsiniz.
+
+## Yem Çeşitleri ve Özellikleri
+- Standart Yem: %25 enerji, 0.15L/dk süt verimi
+- Premium Yem: %35 enerji, 0.25L/dk süt verimi
+- Süper Yem: %50 enerji, 0.40L/dk süt verimi
+
+## Puan Sistemi
+- Süt satışından kazandığınız puanlarla yem satın alabilirsiniz.
+- Puanlarınızı oyuna göndererek aylık reklam gelirinden pay alabilirsiniz.
+- İnek öldüğünde tüm puanlar ve gönderilen puanlar sıfırlanır.
+- İneği canlandırabilirsiniz ancak gönderilen puanlar geri gelmez.
+
+## Kazanç Sıralaması
+- Kazanç sıralaması sonuçları her ayın 3. gününde açıklanır.
+
+## Oyun Sıfırlama
+Her ayın ilk günü saat 00:00'da tüm üyeler için aşağıdaki işlemler gerçekleştirilir:
+- İneğin sağlığı %100'e çıkarılır
+- Tüm puanlar sıfırlanır
+- Tüm süt miktarı sıfırlanır
+- Sistem döngü kilitlenmesini önlemek için tüm kullanıcılara 450 puan eklenir
+- Kazançlar (TL), Seviyeler, XP ve Yemler kalıcıdır
+
+## Seviye Sistemi
+Oyunda seviye sistemi aşağıdaki gibi ilerler:
+- Level 1: 0 XP
+- Level 2: 2.000 XP
+- Level 3: 10.000 XP
+- Level 4: 80.000 XP
+- Level 5: 175.000 XP
+- Level 6: 420.000 XP
+- Level 7: 800.000 XP
+- Level 8: 2.000.000 XP
+- Level 9: 5.000.000 XP
+- Level 10: 10.000.000 XP
+- Level 11: 15.000.000 XP
+- Level 12: 20.000.000 XP
+- Level 13: 25.000.000 XP
+- Level 14: 30.000.000 XP
+- Level 15: 45.000.000 XP
+- Level 16: 80.000.000 XP
+
+Her seviye atladığınızda markette yeni ve daha verimli ürünler açılır. Seviye atlamak için süt satışı yapmanız ve XP kazanmanız gerekir. Her 1 litre süt satışı size 100 XP kazandırır. XP ve seviyeler kalıcıdır, oyun sıfırlansa bile korunur.
+
+## Referans Sistemi
+- Referans linkiniz üzerinden 1 ziyaretçi kayıt olduğunda referansınız olur.
+- Referans olduğunuz üyenin her süt satışından kazandığı toplam puanların %3'ü kadar puan kazanırsınız.
+  Örnek: Referansınız 100 puanlık süt satışı yaptığında, %3'ü olan 3 puan size eklenir.
+- Referansınız kayıt olduktan sonra 25 gün geçerlidir. Süre dolduğunda referans geçerliliğiniz sona erer.
+
+## İnek Yaşam Döngüsü
+İnek yaşam döngüsü aşağıdaki oranlara göre çalışır:
+- İnek yemlenmediğinde açlık oranı 240 dakikada %0'a düşer
+- Açlık %0 olduğunda, inek 5.040 dakika içinde ölür
+- Her dakikada:
+  - Sağlık %0.02 azalır (1 saatte %1.19, 1 günde %28.57)
+  - Açlık %0.42 azalır (1 saatte %25)
+
+## Puan Gönderme Sistemi
+- Minimum puan gönderme limiti 5.000 puandır
+- Puanlarınızı her ayın son günü saat 23:59'a kadar gönderebilirsiniz
+- O ay içinde puan gönderimi yaparsanız, ayın reklam gelirlerinden pay alırsınız
+- Gönderilen puan miktarına göre reklam gelirinden alacağınız pay belirlenir
+- En çok puan gönderen kişi, reklam gelirinin en büyük payını alır
+
+## Yem Çeşitleri ve Seviyeleri
+Her ürünün kendine özel seviyesi ve verimliliği vardır. Ürünler ilgili seviyeye ulaştığınızda aktif olur.
+
+| Yem Adı    | Enerji | Verim (Lt/dk) | Fiyat (Puan) |
+|------------|--------|---------------|--------------|
+| Çim        | %25    | 0.15         | 450          |
+| Yaprak     | %25    | 0.18         | 540          |
+| Buğday     | %25    | 0.21         | 630          |
+| Ayçiçeği   | %25    | 0.24         | 720          |
+| Mısır      | %25    | 0.27         | 810          |
+| Karpuz     | %25    | 0.30         | 900          |
+| Havuç      | %25    | 0.33         | 990          |
+| Patlıcan   | %25    | 0.36         | 1080         |
+| Elma       | %25    | 0.39         | 1170         |
+| Kiraz      | %25    | 0.43         | 1290         |
+| Üzüm       | %25    | 0.47         | 1410         |
+| Lahana     | %25    | 0.50         | 1500         |
+| Şeftali    | %25    | 0.53         | 1590         |
+| Balkabağı  | %25    | 0.56         | 1680         |
+| Biber      | %25    | 0.59         | 1770         |
+| Limon      | %25    | 0.62         | 1860         |

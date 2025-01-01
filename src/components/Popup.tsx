@@ -32,26 +32,38 @@ const Overlay = styled.div`
 `;
 
 const PopupContainer = styled.div`
-  background: white;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 860px;
+  height: 796px;
+  background: var(--bg-secondary);
   border-radius: 15px;
-  padding: 20px;
-  min-width: 300px;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  animation: slideIn 0.3s ease-out;
+  box-shadow: 0 4px 20px var(--shadow-color);
+  z-index: 1000;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+`;
 
-  @keyframes slideIn {
-    from {
-      transform: translateY(20px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
+const PopupContent = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 40px;
+  
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+    border-radius: 4px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
   }
 `;
 
@@ -72,9 +84,10 @@ const CloseButton = styled.button`
 `;
 
 const Title = styled.h2`
-  margin: 0 0 20px 0;
-  color: #1976d2;
-  padding-right: 30px;
+  margin: 0;
+  color: var(--text-primary);
+  padding: 30px 40px 0;
+  font-size: 1.5em;
 `;
 
 export function Popup({ isOpen, onClose, title, children }: PopupProps) {
@@ -103,7 +116,9 @@ export function Popup({ isOpen, onClose, title, children }: PopupProps) {
       <PopupContainer onClick={e => e.stopPropagation()}>
         <CloseButton onClick={onClose}>&times;</CloseButton>
         <Title>{title}</Title>
-        {children}
+        <PopupContent>
+          {children}
+        </PopupContent>
       </PopupContainer>
     </Overlay>
   );
