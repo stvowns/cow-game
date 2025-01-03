@@ -9,10 +9,19 @@ interface Player {
 }
 
 interface LeaderBoardProps {
-  players: Player[];
+  players: Array<{
+    id: number;
+    username: string;
+    sentPoints: number;
+    estimatedEarnings: number;
+    rank: number;
+  }>;
   totalPrizePool: number;
   currentMonth: string;
   daysLeft: number;
+  currentXp?: number;
+  nextLevelXp?: number;
+  currentLevel?: number;
 }
 
 const Container = styled.div`
@@ -109,9 +118,15 @@ const PointsCell = styled.td`
   font-size: 1.1em;
 `;
 
-export function LeaderBoard({ players, totalPrizePool, currentMonth, daysLeft }: LeaderBoardProps) {
-  const totalPoints = players.reduce((sum, player) => sum + player.sentPoints, 0);
-
+export function LeaderBoard({ 
+  players, 
+  totalPrizePool, 
+  currentMonth, 
+  daysLeft,
+  currentXp = 0,
+  nextLevelXp = 0,
+  currentLevel = 1
+}: LeaderBoardProps) {
   return (
     <Container>
       <Header>
@@ -129,6 +144,42 @@ export function LeaderBoard({ players, totalPrizePool, currentMonth, daysLeft }:
         <p>Bu ay dağıtılacak toplam miktar</p>
       </PrizeInfo>
 
+      <div style={{
+        background: '#f5f5f5',
+        padding: '15px',
+        borderRadius: '8px',
+        marginBottom: '20px'
+      }}>
+        <div style={{ marginBottom: '10px' }}>
+          <strong>Seviye {currentLevel}</strong>
+        </div>
+        <div style={{ 
+          background: '#e0e0e0',
+          height: '10px',
+          borderRadius: '5px',
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            width: `${(currentXp / nextLevelXp) * 100}%`,
+            height: '100%',
+            background: '#2196F3',
+            transition: 'width 0.3s ease'
+          }} />
+        </div>
+        <div style={{ 
+          fontSize: '0.9em',
+          color: '#666',
+          marginTop: '5px'
+        }}>
+          {currentXp.toLocaleString()} / {nextLevelXp.toLocaleString()} XP
+        </div>
+      </div>
+
+      <div style={{ marginBottom: '20px', color: '#666' }}>
+        <p>Kalan Süre: {daysLeft} gün</p>
+        <p>Toplam Ödül Havuzu: {totalPrizePool.toLocaleString()} Puan</p>
+      </div>
+
       <Table>
         <thead>
           <tr>
@@ -145,8 +196,8 @@ export function LeaderBoard({ players, totalPrizePool, currentMonth, daysLeft }:
               <UsernameCell>{player.username}</UsernameCell>
               <PointsCell>{player.sentPoints.toLocaleString('tr-TR')}</PointsCell>
               <PointsCell>
-                {totalPoints > 0
-                  ? `₺${((player.sentPoints / totalPoints) * totalPrizePool).toLocaleString('tr-TR', {
+                {totalPrizePool > 0
+                  ? `₺${((player.sentPoints / totalPrizePool) * totalPrizePool).toLocaleString('tr-TR', {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}`

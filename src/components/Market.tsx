@@ -157,7 +157,7 @@ const getProductIcon = (name: string) => {
     'Şeftali': '🍑',
     'Balkabağı': '🎃',
     'Biber': '🫑',
-    'Limon': '🍋'
+    'Yonca': '🍀'
   };
   return icons[name] || '🌱';
 };

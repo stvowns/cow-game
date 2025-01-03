@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import styled from 'styled-components'
 import { Cow } from './components/Cow'
 import { FarmAnimations } from './components/FarmAnimations'
@@ -7,11 +7,13 @@ import { MenuBar } from './components/MenuBar'
 import { Popup } from './components/Popup'
 import { LeaderBoard } from './components/LeaderBoard'
 import { Profile } from './components/Profile'
-import { GiMilkCarton } from 'react-icons/gi';
-import { FaLeaf, FaHeart, FaShoppingCart, FaCoins, FaQuestionCircle, FaHistory, FaTrophy, FaUser, FaUserFriends } from 'react-icons/fa';
+import { GiMilkCarton, GiBowlOfRice, GiPartyPopper, GiStarsStack, GiWheat, GiPlantSeed, GiCorn, GiWatermelon, GiCarrot, GiPlantWatering, GiFruitTree, GiCherry, GiGrapes, GiCabbage, GiPear, GiPumpkin, GiChiliPepper, GiGrain } from 'react-icons/gi';
+import { FaLeaf, FaHeart, FaShoppingCart, FaCoins, FaQuestionCircle, FaHistory, FaTrophy, FaUser, FaUserFriends, FaClock, FaHeartbeat } from 'react-icons/fa';
 import { MdDarkMode, MdLightMode } from 'react-icons/md';
+import { StatCard } from './components/StatCard';
 import { ReferralSystem } from './components/ReferralSystem';
 import { IconType } from 'react-icons';
+import { useMilkProduction } from './hooks/useMilkProduction';
 
 const LEVEL_THRESHOLDS: number[] = [
   0,          // Level 1
@@ -60,6 +62,34 @@ const Button = styled.button`
     cursor: not-allowed;
     transform: none;
   }
+
+  &.confetti {
+    animation: celebrate 0.5s ease-out;
+  }
+
+  @keyframes celebrate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+`;
+
+const NotificationText = styled.div<{ $type: 'points' | 'xp' }>`
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 25px;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  animation: slideIn 0.5s ease-out;
+  z-index: 1000;
+  background: ${props => props.$type === 'points' ? '#4CAF50' : '#2196F3'};
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
 `;
 
 const StatBox = styled.div`
@@ -106,7 +136,11 @@ const Sidebar = styled.div`
 const MainContent = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 `;
 
 const Header = styled.div`
@@ -125,67 +159,6 @@ const StatsGrid = styled.div`
   gap: 20px;
   width: 100%;
   max-width: 800px;
-`;
-
-const StatCard = styled.div`
-  background: var(--bg-secondary);
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 4px 12px var(--shadow-color);
-  transition: all 0.3s ease;
-  animation: fadeInUp 0.5s ease-out;
-  border: 1px solid var(--border-color);
-
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 24px var(--shadow-color);
-  }
-
-  h3 {
-    color: var(--text-primary);
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  p {
-    color: var(--text-secondary);
-    font-size: 1.2em;
-    margin: 10px 0;
-  }
-`;
-
-const MiniProgressBar = styled.div<{ value: number; color: string }>`
-  width: 100%;
-  height: 6px;
-  background: var(--bg-primary);
-  border-radius: 3px;
-  overflow: hidden;
-  position: relative;
-  margin-top: 10px;
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: ${props => props.value}%;
-    background: ${props => props.color};
-    transition: width 0.3s ease;
-  }
 `;
 
 const ActionButton = styled(Button)`
@@ -228,31 +201,42 @@ const Stats = styled.div`
   margin: 20px 0;
   flex-wrap: wrap;
   justify-content: center;
+  width: 100%;
+
+  &.bottom-stats {
+    > div {
+      flex: 1;
+      min-width: 200px;
+    }
+  }
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
-  margin-top: 20px;
+  margin-top: 30px;
   justify-content: center;
 
   button {
     background: var(--accent-primary);
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 15px 30px;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
+    font-size: 1.1em;
 
     &:hover {
       background: var(--accent-secondary);
+      transform: translateY(-2px);
     }
 
     &:disabled {
       background: var(--text-secondary);
       cursor: not-allowed;
+      transform: none;
     }
   }
 `;
@@ -297,33 +281,34 @@ interface FeedState {
   [key: string]: number;
 }
 
-// Yem türleri için interface
-export interface FeedType {
+// Yem türleri için interface güncelleme
+interface FeedType {
   name: string;
   energy: number;
   yield: number;
   price: number;
   minLevel: number;
+  icon: IconType;
 }
 
 // Yem türleri
 export const FEEDS: FeedType[] = [
-  { name: 'Çim', energy: 25, yield: 0.15, price: 450, minLevel: 1 },
-  { name: 'Yaprak', energy: 25, yield: 0.18, price: 540, minLevel: 2 },
-  { name: 'Buğday', energy: 25, yield: 0.21, price: 630, minLevel: 3 },
-  { name: 'Ayçiçeği', energy: 25, yield: 0.24, price: 720, minLevel: 4 },
-  { name: 'Mısır', energy: 25, yield: 0.27, price: 810, minLevel: 5 },
-  { name: 'Karpuz', energy: 25, yield: 0.30, price: 900, minLevel: 6 },
-  { name: 'Havuç', energy: 25, yield: 0.33, price: 990, minLevel: 7 },
-  { name: 'Patlıcan', energy: 25, yield: 0.36, price: 1080, minLevel: 8 },
-  { name: 'Elma', energy: 25, yield: 0.39, price: 1170, minLevel: 9 },
-  { name: 'Kiraz', energy: 25, yield: 0.43, price: 1290, minLevel: 10 },
-  { name: 'Üzüm', energy: 25, yield: 0.47, price: 1410, minLevel: 11 },
-  { name: 'Lahana', energy: 25, yield: 0.50, price: 1500, minLevel: 12 },
-  { name: 'Şeftali', energy: 25, yield: 0.53, price: 1590, minLevel: 13 },
-  { name: 'Balkabağı', energy: 25, yield: 0.56, price: 1680, minLevel: 14 },
-  { name: 'Biber', energy: 25, yield: 0.59, price: 1770, minLevel: 15 },
-  { name: 'Limon', energy: 25, yield: 0.62, price: 1860, minLevel: 16 }
+  { name: 'Çim', energy: 25, yield: 0.0417, price: 10, minLevel: 1, icon: GiGrain },
+  { name: 'Yaprak', energy: 25, yield: 0.024, price: 12, minLevel: 2, icon: GiPlantSeed },
+  { name: 'Buğday', energy: 25, yield: 0.028, price: 14, minLevel: 3, icon: GiWheat },
+  { name: 'Ayçiçeği', energy: 25, yield: 0.031, price: 16, minLevel: 4, icon: GiPlantWatering },
+  { name: 'Mısır', energy: 25, yield: 0.035, price: 18, minLevel: 5, icon: GiCorn },
+  { name: 'Karpuz', energy: 25, yield: 0.038, price: 20, minLevel: 6, icon: GiWatermelon },
+  { name: 'Havuç', energy: 25, yield: 0.042, price: 22, minLevel: 7, icon: GiCarrot },
+  { name: 'Patlıcan', energy: 25, yield: 0.045, price: 24, minLevel: 8, icon: GiPlantWatering },
+  { name: 'Elma', energy: 25, yield: 0.049, price: 26, minLevel: 9, icon: GiFruitTree },
+  { name: 'Kiraz', energy: 25, yield: 0.052, price: 28, minLevel: 10, icon: GiCherry },
+  { name: 'Üzüm', energy: 25, yield: 0.056, price: 30, minLevel: 11, icon: GiGrapes },
+  { name: 'Lahana', energy: 25, yield: 0.059, price: 32, minLevel: 12, icon: GiCabbage },
+  { name: 'Şeftali', energy: 25, yield: 0.063, price: 34, minLevel: 13, icon: GiPear },
+  { name: 'Balkabağı', energy: 25, yield: 0.066, price: 36, minLevel: 14, icon: GiPumpkin },
+  { name: 'Biber', energy: 25, yield: 0.069, price: 38, minLevel: 15, icon: GiChiliPepper },
+  { name: 'Yonca', energy: 25, yield: 0.073, price: 40, minLevel: 16, icon: GiGrain }
 ];
 
 interface FeedValues {
@@ -370,29 +355,71 @@ interface MenuBarProps {
 }
 
 // XP ve seviye hesaplama için gerekli sabitler
-const LEVEL_XP_REQUIREMENTS = [
-  0,          // Level 1
-  2000,       // Level 2
-  10000,      // Level 3
-  80000,      // Level 4
-  175000,     // Level 5
-  420000,     // Level 6
-  800000,     // Level 7
-  2000000,    // Level 8
-  5000000,    // Level 9
-  10000000,   // Level 10
-  15000000,   // Level 11
-  20000000,   // Level 12
-  25000000,   // Level 13
-  30000000,   // Level 14
-  45000000,   // Level 15
-  80000000    // Level 16
+export const LEVEL_XP_REQUIREMENTS = [
+  0,        // Level 1
+  11700,    // Level 2
+  25200,    // Level 3
+  45000,    // Level 4
+  72000,    // Level 5
+  108000,   // Level 6
+  153000,   // Level 7
+  207000,   // Level 8
+  270000,   // Level 9
+  342000,   // Level 10
+  423000,   // Level 11
+  513000,   // Level 12
+  612000,   // Level 13
+  720000,   // Level 14
+  837000,   // Level 15
+  963000    // Level 16
 ];
 
+const ConfettiButton = styled(Button)`
+  position: relative;
+  overflow: visible;
+
+  .confetti-left, .confetti-right {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+
+  .confetti-left {
+    left: -25px;
+    color: #FFD700;
+  }
+
+  .confetti-right {
+    right: -25px;
+    color: #FF6B6B;
+  }
+
+  &.celebrating .confetti-left {
+    animation: confettiLeft 0.5s ease-out;
+  }
+
+    animation: confettiRight 0.5s ease-out;
+  }
+
+  @keyframes confettiLeft {
+    0% { transform: translate(0, -50%) rotate(0deg); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translate(-20px, -50%) rotate(-45deg); opacity: 0; }
+  }
+
+  @keyframes confettiRight {
+    0% { transform: translate(0, -50%) rotate(0deg); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translate(20px, -50%) rotate(45deg); opacity: 0; }
+  }
+`;
+
 function App() {
-  const [health, setHealth] = useState(100);
-  const [hunger, setHunger] = useState(100);
-  const [milk, setMilk] = useState(0);
+  const [health, setHealth] = useState<number>(100);
+  const [hunger, setHunger] = useState<number>(0);
+  const [milk, setMilk] = useState<number>(0);
   const [points, setPoints] = useState(450);
   const [feed, setFeed] = useState<FeedState>(
     FEEDS.reduce((acc, feed) => ({ ...acc, [feed.name]: 0 }), {})
@@ -405,7 +432,7 @@ function App() {
   const [showLogs, setShowLogs] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [sentPoints, setSentPoints] = useState(0);
-  const [milkProductionRate, setMilkProductionRate] = useState(0);
+  const [milkProductionRate, setMilkProductionRate] = useState<number>(0);
   const [level, setLevel] = useState(1);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [totalPrizePool, setTotalPrizePool] = useState(10000);
@@ -433,184 +460,102 @@ function App() {
   const [showReferral, setShowReferral] = useState(false);
   const [xp, setXp] = useState(0);
   const [showLevelTable, setShowLevelTable] = useState(false);
-  const [hasEverFed, setHasEverFed] = useState(false); // Hiç yem kullanıldı mı?
+  const [hasEverFed, setHasEverFed] = useState<boolean>(false); // Hiç yem kullanıldı mı?
   const [isNewMonth, setIsNewMonth] = useState(false); // Yeni ay mı?
+  const [notification, setNotification] = useState<{text: string, type: 'points' | 'xp'} | null>(null);
 
   const addLog = (message: string, type: LogEntry['type']) => {
-    setLogs(prev => [{
-      message,
-      timestamp: new Date(),
-      type
-    }, ...prev].slice(0, 100)); // Son 100 log tutulur
+    // Sadece önemli işlemlerin loglarını tut
+    const importantActions = [
+      'süt satıldı',
+      'yem kullanıldı',
+      'puan gönderildi',
+      'İnek öldü',
+      'İnek canlandırıldı',
+      'Level'
+    ];
+
+    // Mesajı kontrol et ve sadece önemli işlemleri logla
+    if (importantActions.some(action => message.includes(action))) {
+      setLogs(prev => [{
+        message,
+        timestamp: new Date(),
+        type
+      }, ...prev].slice(0, 50)); // Son 50 log tutulur
+    }
   };
 
-  // Açlık azalması (240 dakikada 0'a düşecek şekilde)
-  useEffect(() => {
-    const hungerInterval = setInterval(() => {
-      if (hasEverFed) { // Sadece yem kullanıldıysa açlık azalsın
-        if (hunger > 0) {
-          setHunger(prev => {
-            const decrease = 100 / (240 * 60); // 240 dakika * 60 saniye
-            const newHunger = Math.max(0, prev - decrease);
-            
-            // Kalan süreyi hesapla
-            const remainingTime = Math.ceil((newHunger / 100) * 240);
-            setTimeLeft(remainingTime);
-            
-            return Number(newHunger.toFixed(1)); // Bir ondalık haneye yuvarla
-          });
-        }
-      }
-    }, 1000);
+  // Memoize edilmiş değerler
+  const currentLevelProgress = useMemo(() => {
+    return {
+      currentXp: xp,
+      nextLevelXp: LEVEL_XP_REQUIREMENTS[level],
+      progress: (xp / LEVEL_XP_REQUIREMENTS[level]) * 100
+    };
+  }, [xp, level]);
 
-    return () => clearInterval(hungerInterval);
-  }, [hunger, hasEverFed]);
+  const gameStats = useMemo(() => {
+    return {
+      health,
+      hunger,
+      milk,
+      milkProductionRate,
+      timeLeft
+    };
+  }, [health, hunger, milk, milkProductionRate, timeLeft]);
 
-  // Sağlık azalması (5040 dakikada ölüm)
-  useEffect(() => {
-    const healthInterval = setInterval(() => {
-      if (hunger <= 0 && !hasEverFed) { // Açlık 0 ve hiç yem kullanılmadıysa sağlık azalsın
-        setHealth(prev => {
-          const decrease = 100 / (5040 * 60); // 5040 dakika * 60 saniye
-          return Number(Math.max(0, prev - decrease).toFixed(1));
-        });
-      }
-    }, 1000);
-
-    return () => clearInterval(healthInterval);
-  }, [hunger, hasEverFed]);
-
-  // Süt üretimi (sabit hız)
-  useEffect(() => {
-    const milkInterval = setInterval(() => {
-      if (health > 0 && hunger > 0) {  // İnek sağlıklı VE tok olmalı
-        setMilk(prev => {
-          const production = milkProductionRate; // Kullanılan yemin verim oranı
-          return Number((prev + production).toFixed(1));
-        });
-      }
-    }, 1000 * 60); // Her dakika güncelle
-
-    return () => clearInterval(milkInterval);
-  }, [health, hunger, milkProductionRate]);
-
-  const handleFeedCow = (feedType: string) => {
+  // Callback fonksiyonları
+  const handleFeedCow = useCallback((feedType: string) => {
     const selectedFeed = FEEDS.find(f => f.name === feedType);
     if (!selectedFeed) return;
 
     if (feed[feedType] > 0 && health > 0 && level >= selectedFeed.minLevel) {
-      setHunger(prev => Number(Math.min(100, prev + selectedFeed.energy).toFixed(1)));
+      setHasEverFed(true);
+      
+      setHunger(prevHunger => {
+        const newHunger = Math.min(100, prevHunger + 25);
+        return Number(newHunger.toFixed(1));
+      });
+      
       setFeed(prev => ({ ...prev, [feedType]: prev[feedType] - 1 }));
       setMilkProductionRate(selectedFeed.yield);
-      setHasEverFed(true); // İlk yem kullanıldığında işaretle
-      addLog(`${feedType} yem kullanıldı, enerji +${selectedFeed.energy}%`, 'feed');
+      
+      addLog(`${feedType} yem kullanıldı, süt üretim hızı: ${selectedFeed.yield.toFixed(3)}L/dk`, 'feed');
     }
-  };
+  }, [feed, health, level, addLog]);
 
-  // Dark mod değişikliğini uygula
-  useEffect(() => {
-    document.body.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
-  }, [isDarkMode]);
-
-  const sellMilk = () => {
-    if (milk > 0) {
-      const earnings = Math.floor(milk * 10);
-      const earnedXp = Math.floor(milk * 100);
+  const sellMilk = useCallback(() => {
+    if (milk > 0 && health > 0) {
+      const earnings = Math.floor(milk * 100);
+      const xpGain = Math.floor(milk * 100);
       
       setPoints(prev => prev + earnings);
-      setTotalEarnings(prev => prev + earnings);
-      setXp(prev => prev + earnedXp);
-      addLog(`${milk.toFixed(1)} litre süt satıldı, +${earnings} puan ve +${earnedXp} XP kazanıldı`, 'milk');
-      setMilk(0);
+      setXp(prev => prev + xpGain);
       
-      // Referans bonusu
-      const referralBonus = Math.floor(earnings * 0.03);
-      if (referralBonus > 0) {
-        setReferralEarnings(prev => prev + referralBonus);
-        addLog(`Referans bonusu: +${referralBonus} puan`, 'points');
-      }
+      // Önce puan bildirimi
+      setNotification({ text: `+${earnings} Puan kazandın!`, type: 'points' });
       
-      // Konfeti efekti
-      const button = document.querySelector('.sell-milk-button') as HTMLElement;
-      if (button) {
-        const buttonRect = button.getBoundingClientRect();
-        const centerX = buttonRect.left + buttonRect.width / 2;
-        const centerY = buttonRect.top + buttonRect.height / 2;
-
-        // Konfeti parçacıkları
-        for (let i = 0; i < 50; i++) {
-          const particle = document.createElement('div');
-          const color = ['#ff718d', '#fdff6a', '#71ff7e', '#71a4ff', '#ff71e9'][Math.floor(Math.random() * 5)];
-          
-          particle.style.cssText = `
-            position: fixed;
-            left: ${centerX}px;
-            top: ${centerY}px;
-            width: 10px;
-            height: 10px;
-            background: ${color};
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 1000;
-          `;
-          
-          const angle = Math.random() * Math.PI * 2;
-          const velocity = 8 + Math.random() * 8;
-          const vx = Math.cos(angle) * velocity;
-          const vy = Math.sin(angle) * velocity;
-          
-          document.body.appendChild(particle);
-          
-          let posX = centerX;
-          let posY = centerY;
-          let opacity = 1;
-          let scale = 1;
-          
-          const animate = () => {
-            if (opacity <= 0) {
-              particle.remove();
-              return;
-            }
-            
-            posX += vx;
-            posY += vy + 2; // Yerçekimi efekti
-            opacity -= 0.02;
-            scale -= 0.02;
-            
-            particle.style.transform = `translate(${posX - centerX}px, ${posY - centerY}px) scale(${scale})`;
-            particle.style.opacity = opacity.toString();
-            
-            requestAnimationFrame(animate);
-          };
-          
-          requestAnimationFrame(animate);
-        }
-      }
-      
-      // Satış bildirimi
-      const notification = document.createElement('div');
-      notification.textContent = `+${earnings} puan, +${earnedXp} XP kazandınız!`;
-      notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #4CAF50;
-        color: white;
-        padding: 10px 20px;
-        border-radius: 8px;
-        animation: slideIn 0.3s ease-out;
-        z-index: 1000;
-      `;
-      
-      document.body.appendChild(notification);
+      // 1.5 saniye sonra puan bildirimi kaybolsun ve XP bildirimini gelsin
       setTimeout(() => {
-        notification.style.animation = 'fadeOut 0.3s ease-out';
-        setTimeout(() => notification.remove(), 300);
-      }, 2000);
+        setNotification(null);
+        // 100ms bekle ve XP bildirimini göster
+        setTimeout(() => {
+          setNotification({ text: `+${xpGain} XP kazandın!`, type: 'xp' });
+          // 1.5 saniye sonra XP bildirimi kaybolsun
+          setTimeout(() => setNotification(null), 1500);
+        }, 100);
+      }, 1500);
+      
+      const button = document.querySelector('.sell-milk-button');
+      button?.classList.add('confetti');
+      setTimeout(() => button?.classList.remove('confetti'), 500);
+      
+      setMilk(0);
+      addLog(`${milk.toFixed(4)}L süt satıldı: +${earnings} puan, +${xpGain} XP`, 'milk');
     }
-  };
+  }, [milk, health, addLog]);
 
-  const handleBuyFeed = (feedType: string) => {
+  const handleBuyFeed = useCallback((feedType: string) => {
     const selectedFeed = FEEDS.find(f => f.name === feedType);
     if (!selectedFeed) return;
 
@@ -619,128 +564,31 @@ function App() {
       setPoints(prev => prev - selectedFeed.price);
       addLog(`${feedType} yem satın alındı (-${selectedFeed.price} puan)`, 'feed');
     }
-  };
-
-  const sendPoints = (amount: number) => {
-    if (amount >= 5000 && amount <= points) {  // Minimum 5000 puan kontrolü
-      setPoints(prev => prev - amount);
-      setSentPoints(prev => prev + amount);
-      addLog(`${amount} puan gönderildi`, 'points');
-      
-      // Bildirim göster
-      const notification = document.createElement('div');
-      notification.textContent = `${amount} puan başarıyla gönderildi!`;
-      notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #4CAF50;
-        color: white;
-        padding: 10px 20px;
-        border-radius: 8px;
-        animation: slideIn 0.3s ease-out;
-        z-index: 1000;
-      `;
-      
-      document.body.appendChild(notification);
-      setTimeout(() => {
-        notification.style.animation = 'fadeOut 0.3s ease-out';
-        setTimeout(() => notification.remove(), 300);
-      }, 2000);
-    } else {
-      // Hata bildirimi göster
-      const notification = document.createElement('div');
-      notification.textContent = amount < 5000 ? 
-        'Minimum 5.000 puan gönderebilirsiniz!' : 
-        'Yeterli puanınız bulunmuyor!';
-      notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #f44336;
-        color: white;
-        padding: 10px 20px;
-        border-radius: 8px;
-        animation: slideIn 0.3s ease-out;
-        z-index: 1000;
-      `;
-      
-      document.body.appendChild(notification);
-      setTimeout(() => {
-        notification.style.animation = 'fadeOut 0.3s ease-out';
-        setTimeout(() => notification.remove(), 300);
-      }, 2000);
-    }
-  };
+  }, [points, level, addLog]);
 
   const resetGame = () => {
     setHealth(100);
-    setHunger(100);
+    setHunger(0);
     setMilk(0);
     setMilkProductionRate(0);
     setSentPoints(0);
     setFeed(FEEDS.reduce((acc, feed) => ({ ...acc, [feed.name]: 0 }), {}));
     setPoints(450);
     setTotalEarnings(0);
-    setHasEverFed(false); // Oyun sıfırlandığında yem kullanımını sıfırla
-    setIsNewMonth(true); // Yeni ay olduğunu işaretle
+    setHasEverFed(false);
+    setIsNewMonth(true);
     addLog('İnek canlandırıldı! Oyun yeniden başladı.', 'points');
   };
 
-  // Her ay başında oyunu sıfırla
-  useEffect(() => {
-    const checkMonthlyReset = () => {
-      const now = new Date();
-      if (now.getDate() === 1 && now.getHours() === 0 && now.getMinutes() === 0) {
-        resetGame();
-        addLog('Yeni ay başladı! Oyun sıfırlandı.', 'points');
-      }
-    };
-
-    const resetInterval = setInterval(checkMonthlyReset, 60000); // Her dakika kontrol et
-    return () => clearInterval(resetInterval);
-  }, []);
-
-  // XP'ye göre seviye hesaplama
-  useEffect(() => {
-    const calculateLevel = () => {
-      let newLevel = 1;
-      for (let i = 0; i < LEVEL_XP_REQUIREMENTS.length; i++) {
-        if (xp >= LEVEL_XP_REQUIREMENTS[i]) {
-          newLevel = i + 1;
-        } else {
-          break;
-        }
-      }
-      if (newLevel !== level) {
-        setLevel(newLevel);
-        addLog(`Tebrikler! Level ${newLevel} oldunuz! 🎉`, 'points');
-        
-        // Yeni seviye bildirimi
-        const notification = document.createElement('div');
-        notification.textContent = `🎉 Tebrikler! Level ${newLevel} oldunuz!`;
-        notification.style.cssText = `
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          background: #9C27B0;
-          color: white;
-          padding: 10px 20px;
-          border-radius: 8px;
-          animation: slideIn 0.3s ease-out;
-          z-index: 1000;
-        `;
-        
-        document.body.appendChild(notification);
-        setTimeout(() => {
-          notification.style.animation = 'fadeOut 0.3s ease-out';
-          setTimeout(() => notification.remove(), 300);
-        }, 3000);
-      }
-    };
-
-    calculateLevel();
-  }, [xp, level]);
+  const sendPoints = (amount: number) => {
+    if (amount >= 500 && amount <= points) {
+      setPoints(prev => prev - amount);
+      setSentPoints(prev => prev + amount);
+      addLog(`${amount} puan gönderildi`, 'points');
+      setNotification({ text: `${amount} puan başarıyla gönderildi!`, type: 'points' });
+      setTimeout(() => setNotification(null), 2000);
+    }
+  };
 
   // Ay sonu hesaplaması
   const currentDate = new Date();
@@ -748,30 +596,72 @@ function App() {
   const daysLeft = Math.ceil((lastDayOfMonth.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
   const currentMonth = currentDate.toLocaleString('tr-TR', { month: 'long', year: 'numeric' });
 
-  // Dark mode styles
+  // Dark mod değişikliğini uygula
   useEffect(() => {
-    document.documentElement.style.setProperty('--bg-primary', isDarkMode ? '#1a1a1a' : '#f0f2f5');
-    document.documentElement.style.setProperty('--bg-secondary', isDarkMode ? '#2d2d2d' : '#ffffff');
-    document.documentElement.style.setProperty('--text-primary', isDarkMode ? '#ffffff' : '#000000');
-    document.documentElement.style.setProperty('--text-secondary', isDarkMode ? '#b3b3b3' : '#666666');
-    document.documentElement.style.setProperty('--border-color', isDarkMode ? '#404040' : '#e0e0e0');
-    document.documentElement.style.setProperty('--shadow-color', isDarkMode ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)');
-    document.documentElement.style.setProperty('--accent-primary', isDarkMode ? '#4f6ef2' : '#2196F3');
-    document.documentElement.style.setProperty('--accent-secondary', isDarkMode ? '#3f5ad9' : '#1976D2');
-    document.documentElement.style.setProperty('--card-bg', isDarkMode ? '#2d2d2d' : '#ffffff');
+    document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
   }, [isDarkMode]);
+
+  // Açlık azalması optimizasyonu
+  useEffect(() => {
+    if (!health || !hasEverFed) return;
+
+    const hungerInterval = setInterval(() => {
+      setHunger(prevHunger => {
+        const decrease = 100 / (240 * 60);
+        return Math.max(0, Number((prevHunger - decrease).toFixed(2)));
+      });
+    }, 1000);
+
+    return () => clearInterval(hungerInterval);
+  }, [health, hasEverFed]);
+
+  // Sağlık azalması optimizasyonu
+  useEffect(() => {
+    if (hunger > 0 || health <= 0) return;
+
+    const healthInterval = setInterval(() => {
+      setHealth(prev => {
+        const decrease = 100 / (5040 * 60);
+        return Number(Math.max(0, prev - decrease).toFixed(1));
+      });
+    }, 1000);
+
+    return () => clearInterval(healthInterval);
+  }, [hunger, health]);
+
+  // XP'ye göre seviye hesaplama optimizasyonu
+  useEffect(() => {
+    const newLevel = LEVEL_XP_REQUIREMENTS.findIndex(threshold => xp < threshold) || LEVEL_XP_REQUIREMENTS.length;
+    
+    if (newLevel !== level) {
+      setLevel(newLevel);
+      addLog(`Tebrikler! Level ${newLevel} oldunuz! 🎉`, 'points');
+    }
+  }, [xp, level]);
+
+  // Kalan süre hesaplama optimizasyonu
+  useEffect(() => {
+    setTimeLeft(hunger > 0 ? Math.ceil((hunger / 100) * 240) : 0);
+  }, [hunger]);
+
+  // Süt üretimi hook'u
+  useMilkProduction({
+    health,
+    hunger,
+    milkProductionRate,
+    hasEverFed,
+    setMilk
+  });
 
   const handleUpdateProfile = (updates: { username?: string; email?: string; password?: string }) => {
     if (updates.username) {
       setUsername(updates.username);
-      addLog('Kullanıcı adı güncellendi', 'points');
     }
     if (updates.email) {
       setEmail(updates.email);
-      addLog('E-posta adresi güncellendi', 'points');
     }
     if (updates.password) {
-      addLog('Şifre başarıyla değiştirildi', 'points');
+      // Şifre değişikliği işlemi
     }
     setShowProfile(false);
   };
@@ -816,53 +706,76 @@ function App() {
 
       <MainContent>
         <GameContainer>
-          <Cow 
-            health={health} 
-            hunger={hunger.toString()} 
-            timeLeft={timeLeft} 
-            hasFeed={Object.values(feed).some(count => count > 0)}
+          <Cow
+            health={health}
+            hunger={hunger}
+            timeLeft={timeLeft}
+            hasEverFed={hasEverFed}
             milkProductionRate={milkProductionRate}
           />
-          
-          {!hasEverFed && health > 0 && (
-            <p style={{ color: 'orange', marginTop: '10px', textAlign: 'center' }}>
-              ⚠️ Yem kullanarak süt üretimini başlatın!
-            </p>
-          )}
 
-          <StatsGrid>
-            <StatCard>
-              <h3>
-                <GiMilkCarton style={{ color: '#2196F3', fontSize: '1.4em' }} />
-                Süt Üretimi
-              </h3>
-              <p>
-                {milk.toFixed(1)} Lt
-                <small style={{ display: 'block', fontSize: '0.8em', opacity: 0.8, marginTop: '5px' }}>
-                  Üretim Hızı: {health > 0 && hunger > 0 && milkProductionRate > 0 ? 
-                    `${(milkProductionRate * 60).toFixed(2)} Lt/saat` : 
-                    <span style={{ color: '#ff6b6b' }}>Üretim Yapılmıyor!</span>}
-                </small>
-              </p>
-              <MiniProgressBar value={milk} color="rgba(255, 255, 255, 0.8)" />
-            </StatCard>
-            <StatCard>
-              <h3>
-                <FaHeart style={{ color: '#E91E63', fontSize: '1.4em' }} />
-                Toplam Sağlık Süresi
-              </h3>
-              <p>{Math.ceil(health * 50.4)} dakika</p>
-              <MiniProgressBar value={health} color="#4CAF50" />
-            </StatCard>
-          </StatsGrid>
+          <Stats>
+            <StatCard
+              title="Açlık"
+              value={hunger}
+              unit="%"
+              icon={GiBowlOfRice}
+              color="#4CAF50"
+              timeLeft={timeLeft}
+              style={{ width: '100%', maxWidth: '1000px', margin: '0 auto' }}
+            />
+          </Stats>
 
-          <ButtonGroup>
+          <Stats className="bottom-stats">
+            <StatCard
+              title="Süt Üretimi"
+              value={milk}
+              unit="Lt"
+              icon={GiMilkCarton}
+              color="#ffffff"
+            />
+            <StatCard
+              title="Üretim Hızı"
+              value={milkProductionRate}
+              unit="Lt/saat"
+              icon={FaClock}
+              color="#FF9800"
+              health={health}
+            />
+            <StatCard
+              title="Sağlık"
+              value={health}
+              unit="%"
+              icon={FaHeartbeat}
+              color="#E91E63"
+              timeLeft={timeLeft}
+            />
+          </Stats>
+
+          <ButtonGroup style={{ marginTop: '30px' }}>
             <Button
               onClick={sellMilk}
               disabled={milk === 0 || health <= 0}
               className="sell-milk-button"
+              style={{ fontSize: '1.1em', padding: '15px 30px' }}
             >
-              Sütü Sat ({milk.toFixed(1)} L)
+              Sütü Sat ({milk.toFixed(4)} L)
+            </Button>
+
+            {/* Test için öldürme butonu */}
+            <Button
+              onClick={() => {
+                setHealth(0);
+                setHunger(0);
+                setMilk(0);
+              }}
+              style={{ 
+                background: '#ff4444',
+                fontSize: '1em',
+                padding: '10px 20px'
+              }}
+            >
+              İneği Öldür (Test)
             </Button>
           </ButtonGroup>
 
@@ -876,11 +789,6 @@ function App() {
               </ReviveButton>
             </div>
           )}
-          {hunger === 0 && health > 0 && (
-            <p style={{ color: 'orange', marginTop: '20px' }}>
-              ⚠️ İneğiniz aç! Lütfen yemlemeyi unutmayın.
-            </p>
-          )}
         </GameContainer>
 
         <Popup 
@@ -893,6 +801,9 @@ function App() {
             totalPrizePool={totalPrizePool}
             currentMonth={currentMonth}
             daysLeft={daysLeft}
+            currentXp={xp}
+            nextLevelXp={LEVEL_XP_REQUIREMENTS[level]}
+            currentLevel={level}
           />
         </Popup>
       </MainContent>
@@ -1082,31 +993,74 @@ function App() {
         title="Seviye Tablosu"
       >
         <div style={{ padding: '20px' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ marginBottom: '20px', padding: '15px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
+            <h3 style={{ margin: '0 0 10px 0' }}>Mevcut Durumunuz</h3>
+            <p style={{ margin: '0' }}>Seviye: {level}</p>
+            <p style={{ margin: '5px 0 0 0' }}>XP: {xp.toLocaleString('tr-TR')} / {LEVEL_XP_REQUIREMENTS[level].toLocaleString('tr-TR')}</p>
+            <div style={{ 
+              width: '100%', 
+              height: '8px', 
+              background: 'var(--bg-primary)', 
+              borderRadius: '4px',
+              marginTop: '10px',
+              overflow: 'hidden'
+            }}>
+              <div style={{ 
+                width: `${(xp / LEVEL_XP_REQUIREMENTS[level]) * 100}%`,
+                height: '100%',
+                background: 'var(--accent-primary)',
+                transition: 'width 0.3s ease'
+              }} />
+            </div>
+          </div>
+
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr>
-                <th style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>Seviye</th>
-                <th style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>Gerekli XP</th>
-                <th style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>Durum</th>
+                <th style={{ padding: '12px', borderBottom: '1px solid var(--border-color)', textAlign: 'left' }}>Seviye</th>
+                <th style={{ padding: '12px', borderBottom: '1px solid var(--border-color)', textAlign: 'left' }}>Gerekli XP</th>
+                <th style={{ padding: '12px', borderBottom: '1px solid var(--border-color)', textAlign: 'left' }}>Açılan Yem</th>
+                <th style={{ padding: '12px', borderBottom: '1px solid var(--border-color)', textAlign: 'left' }}>Durum</th>
               </tr>
             </thead>
             <tbody>
-              {LEVEL_THRESHOLDS.map((threshold, index) => (
-                <tr key={index + 1} style={{ 
-                  background: level === index + 1 ? 'var(--accent-primary)' : 'transparent',
-                  color: level === index + 1 ? 'white' : 'inherit'
-                }}>
-                  <td style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>Level {index + 1}</td>
-                  <td style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>{threshold.toLocaleString('tr-TR')} XP</td>
-                  <td style={{ padding: '10px', borderBottom: '1px solid var(--border-color)' }}>
-                    {level === index + 1 ? '🎯 Mevcut Seviye' : level > index + 1 ? '✅ Tamamlandı' : '🔒 Kilitli'}
-                  </td>
-                </tr>
-              ))}
+              {LEVEL_XP_REQUIREMENTS.map((threshold, index) => {
+                const levelStatus = level > index + 1 ? 'completed' : level === index + 1 ? 'current' : 'locked';
+                const feed = FEEDS.find(f => f.minLevel === index + 1);
+                
+                return (
+                  <tr key={index + 1} style={{ 
+                    background: levelStatus === 'current' ? 'var(--accent-primary)' : 'transparent',
+                    color: levelStatus === 'current' ? 'white' : 'inherit',
+                    opacity: levelStatus === 'locked' ? 0.7 : 1
+                  }}>
+                    <td style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>Level {index + 1}</td>
+                    <td style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>{threshold.toLocaleString('tr-TR')} XP</td>
+                    <td style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>
+                      {feed ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {React.createElement(feed.icon, { size: 20 })}
+                          <span>{feed.name}</span>
+                        </div>
+                      ) : '-'}
+                    </td>
+                    <td style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>
+                      {levelStatus === 'current' ? '🎯 Mevcut Seviye' : 
+                       levelStatus === 'completed' ? '✅ Açıldı' : '🔒 Kilitli'}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </Popup>
+
+      {notification && (
+        <NotificationText $type={notification.type}>
+          {notification.text}
+        </NotificationText>
+      )}
     </AppContainer>
   );
 }

@@ -1,50 +1,70 @@
-# React + TypeScript + Vite
+# 🐮 Süt Çiftliği Oyunu
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Süt Çiftliği, React ve TypeScript ile geliştirilmiş bir web tabanlı oyundur. Oyuncular sanal bir inek çiftliği işletir, süt üretir ve puanlar kazanır.
 
-Currently, two official plugins are available:
+## 🎮 Özellikler
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- İnek besleme ve süt üretimi sistemi
+- Farklı yem türleri ve seviyeleri
+- Puan toplama ve seviye sistemi
+- Liderlik tablosu
+- Referans sistemi
+- Gece/Gündüz modu
+- Animasyonlu arayüz
 
-## Expanding the ESLint configuration
+## 🚀 Kurulum
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+1. Repoyu klonlayın:
+\`\`\`bash
+git clone https://github.com/kullaniciadi/sut-ciftligi.git
+\`\`\`
 
-- Configure the top-level `parserOptions` property like this:
+2. Proje dizinine gidin:
+\`\`\`bash
+cd sut-ciftligi
+\`\`\`
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+3. Bağımlılıkları yükleyin:
+\`\`\`bash
+npm install
+\`\`\`
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+4. Geliştirme sunucusunu başlatın:
+\`\`\`bash
+npm start
+\`\`\`
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+## 🎯 Nasıl Oynanır
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+1. İneğinizi beslemek için yem satın alın
+2. Yemler ile ineğinizi besleyin
+3. Üretilen sütü satarak puan kazanın
+4. Puanlarınızı göndererek aylık ödül havuzundan pay alın
+5. Seviye atlayarak daha verimli yemler açın
+
+## 🛠️ Teknolojiler
+
+- React
+- TypeScript
+- Styled Components
+- React Icons
+
+## 📝 Oyun Kuralları
+
+- İnek açlığı 240 dakikada %0'a düşer
+- İnek sağlığı 5040 dakikada %0'a düşer
+- Her yem kullanımı açlığı %25 artırır
+- İnek öldüğünde tüm puanlar sıfırlanır
+- Her ay başında oyun sıfırlanır
+
+## 🤝 Katkıda Bulunma
+
+1. Bu repoyu fork edin
+2. Yeni bir branch oluşturun (`git checkout -b feature/yeniOzellik`)
+3. Değişikliklerinizi commit edin (`git commit -am 'Yeni özellik: XYZ'`)
+4. Branch'inizi push edin (`git push origin feature/yeniOzellik`)
+5. Pull Request oluşturun
+
+## 📜 Lisans
+
+Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.

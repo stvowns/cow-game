@@ -2,96 +2,70 @@ import styled from 'styled-components';
 
 interface CowProps {
   health: number;
-  hunger: string;
+  hunger: number;
   timeLeft: number;
-  hasFeed: boolean;
+  hasEverFed: boolean;
   milkProductionRate: number;
 }
 
-const CowContainer = styled.div<{ isAlive: boolean; isProducing: boolean }>`
+interface StyledProps {
+  $health: number;
+  $milkProductionRate: number;
+  $hasEverFed: boolean;
+  $hunger: number;
+}
+
+const CowContainer = styled.div<StyledProps>`
   text-align: center;
   margin: 20px 0;
-  animation: ${props => props.isProducing ? 'breathe 3s infinite ease-in-out' : 'none'};
-  filter: ${props => !props.isAlive ? 'grayscale(100%)' : 'none'};
-  transform-origin: center center;
-
-  @keyframes breathe {
-    0%, 100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.05);
-    }
-  }
+  opacity: ${props => props.$health > 0 ? 1 : 0.5};
+  transition: opacity 0.3s ease;
 `;
 
-const CowImage = styled.img`
+const CowImage = styled.img<StyledProps & { $hasEverFed: boolean }>`
   width: 300px;
   height: 300px;
   object-fit: contain;
-`;
-
-const ProgressBar = styled.div<{ value: number; color: string }>`
-  width: 80%;
-  height: 20px;
-  background: var(--bg-primary);
   border-radius: 10px;
-  overflow: hidden;
-  position: relative;
-  margin: 20px auto 40px auto;
+  filter: ${props => props.$health <= 0 ? 'grayscale(100%)' : 'none'};
+  animation: ${props => {
+    if (!props.$hasEverFed || props.$health <= 0) return 'none';
+    if (props.$hunger <= 0) return 'none';
+    return 'breathe 4s ease-in-out infinite';
+  }};
+  transition: filter 0.3s ease;
 
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: ${props => props.value}%;
-    background: ${props => props.color};
-    transition: width 0.3s ease;
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
   }
 `;
 
-const ProgressLabel = styled.div`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 500;
-  font-size: 0.9em;
-  z-index: 1;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-`;
-
-export function Cow({ health, hunger, timeLeft, hasFeed, milkProductionRate }: CowProps) {
-  const isAlive = health > 0;
-  const isProducing = health > 0 && Number(hunger) > 0 && milkProductionRate > 0;
-  const hungerValue = Number(hunger);
-  
+export function Cow({ health, hunger, timeLeft, hasEverFed, milkProductionRate }: CowProps) {
   return (
-    <div>
-      <CowContainer isAlive={isAlive} isProducing={isProducing}>
-        <CowImage src="/happy-cow.png" alt="İnek" />
-      </CowContainer>
-      <ProgressBar value={hungerValue} color="#2196F3">
-        <ProgressLabel>Açlık: %{hungerValue.toFixed(1)}</ProgressLabel>
-      </ProgressBar>
-      {health > 0 && hungerValue > 0 && milkProductionRate === 0 && (
+    <CowContainer $health={health} $milkProductionRate={milkProductionRate} $hasEverFed={hasEverFed} $hunger={hunger}>
+      <CowImage 
+        src="/happy-cow.png" 
+        alt="İnek" 
+        $health={health} 
+        $milkProductionRate={milkProductionRate}
+        $hasEverFed={hasEverFed}
+        $hunger={hunger}
+      />
+      
+      {/* Sadece başlangıç uyarısı */}
+      {!hasEverFed && health > 0 && milkProductionRate === 0 && (
         <div style={{ 
           color: '#ff6b6b', 
-          textAlign: 'center', 
-          marginTop: '10px',
-          padding: '8px',
-          background: 'rgba(255, 107, 107, 0.1)',
+          background: 'rgba(255, 107, 107, 0.1)', 
+          padding: '15px',
           borderRadius: '8px',
-          fontSize: '0.9em'
+          marginTop: '20px',
+          textAlign: 'center'
         }}>
           ⚠️ Yem kullanarak süt üretimini başlatın!
         </div>
       )}
-    </div>
+    </CowContainer>
   );
 } 
